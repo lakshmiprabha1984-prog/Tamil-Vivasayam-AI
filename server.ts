@@ -61,12 +61,18 @@ async function logUserAction(userId: string | null, action: string, details?: st
 
 // Local JWT Login
 app.post('/api/auth/login', async (req, res) => {
+  console.log("====== LOGIN ROUTE HIT ======");
+  console.log(req.body);
+
   const { email, password } = req.body;
+
   if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required' });
+    return res.status(400).json({
+      error: 'Email and password are required'
+    });
   }
 
-  try {
+    try {
     const userList = await db.select().from(users).where(eq(users.email, email)).limit(1);
     if (userList.length === 0) {
       return res.status(400).json({ error: 'Invalid email or password' });
@@ -1907,10 +1913,19 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), 'dist');
+    const distPath = path.join(process.cwd(), "dist");
+
     app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+
+    // Never let the React fallback handle API requests
+    app.get("*", (req, res, next) => {
+      if (req.path.startsWith("/api")) {
+        return res.status(404).json({
+          error: `API route not found: ${req.path}`
+        });
+      }
+
+      res.sendFile(path.join(distPath, "index.html"));
     });
   }
 
