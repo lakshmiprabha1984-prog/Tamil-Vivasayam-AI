@@ -1894,6 +1894,12 @@ async function seedDatabaseIfEmpty() {
 
 async function startServer() {
   await seedDatabaseIfEmpty();
+  app.get('/api/test', (req, res) => {
+    res.json({
+      success: true,
+      message: 'Express API is working'
+    });
+  });
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },
