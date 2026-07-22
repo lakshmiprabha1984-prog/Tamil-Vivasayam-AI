@@ -1908,7 +1908,7 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '127.0.0.1', () => {
+  app.listen(PORT, () => {
     console.log(`[Tamil Vivasayam AI] Server running on http://localhost:${PORT}`);
   });
 }
