@@ -25,6 +25,8 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
+console.log("===== SERVER VERSION =====");
+console.log("REGISTER ROUTE BUILD: July 2026");
 const PORT = Number(process.env.PORT) || 3001; const JWT_SECRET = process.env.JWT_SECRET || 'cropcare_vivasayam_secure_jwt_secret_2026';
 
 // Body parsing with size limit for base64 leaf uploads
@@ -54,8 +56,12 @@ async function logUserAction(userId: string | null, action: string, details?: st
     console.error('Failed to write user log:', error);
   }
 }
+
 // Email Registration
+console.log("REGISTER ROUTE LOADED");
 app.post('/api/auth/register', async (req, res) => {
+  console.log("REGISTER ROUTE HIT");
+  console.log(req.body);
   try {
     const {
       email,
@@ -127,16 +133,16 @@ app.post('/api/auth/register', async (req, res) => {
       return res.json({
         success: true,
         token,
-        user: { 
-          uid: existingUser.uid, 
-          email: existingUser.email, 
-          name, 
-          role: role || existingUser.role, 
-          phone, 
+        user: {
+          uid: existingUser.uid,
+          email: existingUser.email,
+          name,
+          role: role || existingUser.role,
+          phone,
           farmName,
-          district, 
-          village, 
-          language: language || existingUser.language 
+          district,
+          village,
+          language: language || existingUser.language
         }
       });
     }
@@ -187,17 +193,17 @@ app.post('/api/auth/register', async (req, res) => {
     return res.json({
       success: true,
       token,
-      user: { 
-        uid, 
-        email, 
-        name, 
-        role: role || "farmer", 
-        phone, 
-        farmName, 
-        district, 
-        village, 
+      user: {
+        uid,
+        email,
+        name,
+        role: role || "farmer",
+        phone,
+        farmName,
+        district,
+        village,
         language: language || "ta"
-       }
+      }
     });
 
   } catch (error) {
@@ -2087,4 +2093,4 @@ async function startServer() {
   });
 }
 
-startServer();
+startServer()
