@@ -33,6 +33,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Sync token and user changes with localStorage
   useEffect(() => {
+    console.log("TOKEN CHANGED:", token);
     if (token) {
       localStorage.setItem('cropcare_token', token);
     } else {
@@ -41,6 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [token]);
 
   useEffect(() => {
+    console.log("USER CHANGED:", user);
     if (user) {
       localStorage.setItem('cropcare_user', JSON.stringify(user));
     } else {
@@ -49,10 +51,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [user]);
 
   const setSession = (newToken: string, newUser: User) => {
+    console.log("SET SESSION CALLED");
+    console.log(newToken);
+    console.log(newUser);
+
+    localStorage.setItem("cropcare_token", newToken);
+    localStorage.setItem("cropcare_user", JSON.stringify(newUser));
+
     setToken(newToken);
     setUser(newUser);
   };
-
   // Authenticate and sync with backend for Google Firebase Auth
   // Authenticate and sync with backend for Google Firebase Auth
   const syncFirebaseUser = async (firebaseUser: FirebaseUser) => {

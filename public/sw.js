@@ -5,9 +5,6 @@ const API_CACHE_NAME = 'Tamil Vivasayam-api-cache-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/src/main.tsx',
-  '/src/App.tsx',
-  '/src/index.css',
   '/favicon.ico'
 ];
 
@@ -49,7 +46,13 @@ function isApiRequest(url) {
 // Fetch interception
 self.addEventListener('fetch', (event) => {
   const requestUrl = new URL(event.request.url);
-
+  // Skip browser extension requests
+  if (
+    requestUrl.protocol !== 'http:' &&
+    requestUrl.protocol !== 'https:'
+  ) {
+    return;
+  }
   // Skip non-GET requests
   if (event.request.method !== 'GET') {
     return;
@@ -64,7 +67,12 @@ self.addEventListener('fetch', (event) => {
           if (response.status === 200) {
             const responseClone = response.clone();
             caches.open(API_CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseClone);
+              if (
+                event.request.url.startsWith('http://') ||
+                event.request.url.startsWith('https://')
+              ) {
+                cache.put(event.request, responseClone);
+              }
             });
           }
           return response;
@@ -75,7 +83,7 @@ self.addEventListener('fetch', (event) => {
             if (cachedResponse) {
               return cachedResponse;
             }
-            
+
             // If it's not even in the cache, return an offline-mode specific fallback payload
             // so the application doesn't crash and we can handle it nicely in the UI.
             const emptyFallback = [];
@@ -112,7 +120,7 @@ self.addEventListener('fetch', (event) => {
                 headers: { 'Content-Type': 'application/json' }
               });
             }
-            
+
             return new Response(JSON.stringify(emptyFallback), {
               headers: { 'Content-Type': 'application/json' }
             });
@@ -130,7 +138,12 @@ self.addEventListener('fetch', (event) => {
           if (networkResponse && networkResponse.status === 200) {
             const responseClone = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseClone);
+              if (
+                event.request.url.startsWith('http://') ||
+                event.request.url.startsWith('https://')
+              ) {
+                cache.put(event.request, responseClone);
+              }
             });
           }
           return networkResponse;

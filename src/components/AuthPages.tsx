@@ -43,8 +43,9 @@ export default function AuthPages({ onSuccess, initialMode = 'login' }: AuthPage
     }
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    console.log("⭐ REGISTER BUTTON CLICKED ⭐");
     setError('');
     setLoading(true);
 
@@ -57,9 +58,13 @@ export default function AuthPages({ onSuccess, initialMode = 'login' }: AuthPage
         district,
         village,
       });
+
+      console.log("⭐ REGISTER RESPONSE ⭐", data);
+
       setSession(data.token, data.user);
       onSuccess();
     } catch (err: any) {
+      console.error("⭐ REGISTER ERROR ⭐", err);
       setError(err.message || 'பதிவு செய்வதில் பிழை. Registration failed.');
     } finally {
       setLoading(false);
