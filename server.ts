@@ -54,6 +54,159 @@ async function logUserAction(userId: string | null, action: string, details?: st
     console.error('Failed to write user log:', error);
   }
 }
+// Email Registration
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const {
+      email,
+      password,
+      name,
+      role,
+      phone,
+      farmName,
+      district,
+      village,
+      language
+    } = req.body;
+
+    if (!email || !password || !name) {
+      return res.status(400).json({
+        error: "Name, email and password are required"
+      });
+    }
+
+    const existingUsers = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+
+    // Existing Google account -> set password
+    if (existingUsers.length > 0) {
+      const existingUser = existingUsers[0];
+
+      if (existingUser.passwordHash) {
+        return res.status(400).json({
+          error: "Email already registered."
+        });
+      }
+
+      const passwordHash = await bcrypt.hash(password, 10);
+
+      await db
+        .update(users)
+        .set({
+          passwordHash,
+          name,
+          role: role || existingUser.role,
+          phone,
+          farmName,
+          district,
+          village,
+          language: language || existingUser.language
+        })
+        .where(eq(users.uid, existingUser.uid));
+
+      await logUserAction(
+        existingUser.uid,
+        "REGISTER",
+        "Password added for Google account"
+      );
+
+      const token = jwt.sign(
+        {
+          uid: existingUser.uid,
+          email: existingUser.email,
+          role: existingUser.role,
+          name
+        },
+        JWT_SECRET,
+        { expiresIn: "7d" }
+      );
+
+      return res.json({
+        success: true,
+        token,
+        user: { 
+          uid: existingUser.uid, 
+          email: existingUser.email, 
+          name, 
+          role: role || existingUser.role, 
+          phone, 
+          farmName,
+          district, 
+          village, 
+          language: language || existingUser.language 
+        }
+      });
+    }
+
+    // Brand new account
+    const uid = "user_" + Math.random().toString(36).substring(2, 11);
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    await db.insert(users).values({
+      uid,
+      email,
+      passwordHash,
+      name,
+      role: role || "farmer",
+      phone,
+      farmName,
+      district,
+      village,
+      language: language || "ta"
+    });
+
+    await logUserAction(
+      uid,
+      "REGISTER",
+      "Registered with Email"
+    );
+
+    await db.insert(notifications).values({
+      id: Math.random().toString(36).substring(2, 11),
+      userId: uid,
+      title: "வணக்கம்! Welcome to Tamil Vivasayam AI 🌾",
+      message: "Registration completed successfully!",
+      type: "system"
+    });
+
+    const token = jwt.sign(
+      {
+        uid,
+        email,
+        role: role || "farmer",
+        name
+      },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    return res.json({
+      success: true,
+      token,
+      user: { 
+        uid, 
+        email, 
+        name, 
+        role: role || "farmer", 
+        phone, 
+        farmName, 
+        district, 
+        village, 
+        language: language || "ta"
+       }
+    });
+
+  } catch (error) {
+    console.error("Register error:", error);
+    return res.status(500).json({
+      error: "Internal server error during registration"
+    });
+  }
+});
 
 // ---------------------------------------------------------
 // 1. AUTHENTICATION API ENDPOINTS
@@ -72,7 +225,7 @@ app.post('/api/auth/login', async (req, res) => {
     });
   }
 
-    try {
+  try {
     const userList = await db.select().from(users).where(eq(users.email, email)).limit(1);
     if (userList.length === 0) {
       return res.status(400).json({ error: 'Invalid email or password' });
